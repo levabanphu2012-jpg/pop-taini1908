@@ -1,0 +1,55 @@
+--// FIX LAG SOUND CLEANER (Smooth Camera)
+--// By Pi Ca Po
+
+local Lighting = game:GetService("Lighting")
+local Camera = workspace.CurrentCamera or workspace:WaitForChild("CurrentCamera")
+
+-- 1. Disable global shadows
+Lighting.GlobalShadows = false
+
+-- 2. Disable Lighting effects
+for _, v in ipairs(Lighting:GetChildren()) do
+    if v:IsA("BlurEffect")
+    or v:IsA("SunRaysEffect")
+    or v:IsA("ColorCorrectionEffect")
+    or v:IsA("BloomEffect")
+    or v:IsA("DepthOfFieldEffect") then
+        v.Enabled = false
+    end
+end
+
+-- 3. Optimize workspace
+for _, v in ipairs(workspace:GetDescendants()) do
+    if v:IsA("ParticleEmitter")
+    or v:IsA("Trail")
+    or v:IsA("Smoke")
+    or v:IsA("Fire")
+    or v:IsA("Sparkles")
+    or v:IsA("Beam") then
+        v.Enabled = false
+    elseif v:IsA("PointLight")
+    or v:IsA("SpotLight")
+    or v:IsA("SurfaceLight") then
+        v.Enabled = false
+    elseif v:IsA("Sound") then
+        if v.Volume <= 0.3 or (not v.Looped and v.TimeLength > 0 and v.TimeLength <= 2) then
+            v:Stop()
+            v.Volume = 0
+        end
+    end
+end
+
+-- 4. Smooth Camera
+local RunService = game:GetService("RunService")
+local lastCF = Camera.CFrame
+
+RunService.RenderStepped:Connect(function()
+    if not Camera then return end
+    local newCF = Camera.CFrame
+    if (newCF.Position - lastCF.Position).Magnitude < 0.05 then
+        Camera.CFrame = lastCF:Lerp(newCF, 0.5)
+    end
+    lastCF = Camera.CFrame
+end)
+
+print("✅ Fix Lag Sound Cleaner (Smooth Camera) Loaded!")
